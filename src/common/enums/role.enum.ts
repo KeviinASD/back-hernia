@@ -2,5 +2,6 @@
 export enum RoleTier {
     User = 'USER',
     Admin = 'ADMIN',
-    SuperAdmin = 'SUPER_DMIN'
+    SuperAdmin = 'SUPER_DMIN',
+    Doctor = 'DOCTOR',
 }

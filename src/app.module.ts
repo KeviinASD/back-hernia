@@ -7,6 +7,8 @@ import { ConfigModule } from '@nestjs/config';
 import dbConfig from './config/db.config';
 import { SeedModule } from './config/seeding/seed.module';
 import { IntegrationsModule } from './integrations/integrations.module';
+import { PacientesModule } from './modules/pacientes/pacientes.module';
+import { HistoriaClinicaModule } from './modules/historia-clinica/historia-clinica.module';
 
 const config: DatabaseConfig = configService.get<DatabaseConfig>('DATABASE');
 
@@ -40,6 +42,8 @@ const config: DatabaseConfig = configService.get<DatabaseConfig>('DATABASE');
     UsersModule,
     SeedModule,
     IntegrationsModule,
+    PacientesModule,
+    HistoriaClinicaModule,
   ],
   controllers: [],
   providers: [],

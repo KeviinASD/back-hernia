@@ -131,3 +131,11 @@ export class PredictAllResponseDto {
   @ApiProperty({ type: [ModelResultDto] })
   results: ModelResultDto[];
 }
+
+export class ModelsResponseDto {
+  @ApiProperty({ description: 'Modelos disponibles en el servidor', example: ['yolo-hernia-v1', 'yolo-hernia-v2'] })
+  available_models: string[];
+
+  @ApiProperty({ description: 'Dispositivo en uso', example: 'cuda' })
+  device: string;
+}

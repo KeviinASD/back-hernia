@@ -1,6 +1,6 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import axios, { AxiosError } from 'axios';
-import { PredictResponseDto, PredictAllResponseDto } from './dto/predict.dto';
+import { PredictResponseDto, PredictAllResponseDto, ModelsResponseDto } from './dto/predict.dto';
 import { MulterFile } from './types/multer-file.type';
 
 @Injectable()
@@ -49,6 +49,18 @@ export class DetectionService {
       const { data } = await axios.post<PredictAllResponseDto>(
         `${this.baseUrl}/predict/all`,
         form,
+        { headers: { 'x-api-key': this.apiKey } },
+      );
+      return data;
+    } catch (err) {
+      this.handleAxiosError(err);
+    }
+  }
+
+  async getModels(): Promise<ModelsResponseDto> {
+    try {
+      const { data } = await axios.get<ModelsResponseDto>(
+        `${this.baseUrl}/models`,
         { headers: { 'x-api-key': this.apiKey } },
       );
       return data;
