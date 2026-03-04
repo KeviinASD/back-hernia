@@ -3,7 +3,7 @@ import axios, { AxiosInstance } from 'axios';
 import { IAiProvider, AiProviderResponse } from '../interfaces/ai-provider.interface';
 
 @Injectable()
-export class OpenAiService implements IAiProvider {
+export class OpenAiProvider implements IAiProvider {
   readonly name = 'openai';
 
   private readonly client: AxiosInstance;
@@ -32,7 +32,7 @@ export class OpenAiService implements IAiProvider {
         max_tokens: 2000,
       });
 
-      const text: string     = response.data.choices[0].message.content;
+      const text: string       = response.data.choices[0].message.content;
       const tokensUsed: number =
         response.data.usage.prompt_tokens + response.data.usage.completion_tokens;
 

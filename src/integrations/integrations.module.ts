@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { DetectionModule } from './detection/detection.module';
-import { OpenAiModule } from './openai/openai.module';
+import { AiModule } from './ai/ai.module';
 
 @Module({
-  imports: [DetectionModule, OpenAiModule],
+  imports: [DetectionModule, AiModule],
 })
 export class IntegrationsModule {}

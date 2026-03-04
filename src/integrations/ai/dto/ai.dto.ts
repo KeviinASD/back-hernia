@@ -1,7 +1,7 @@
 import { IsString } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class OpenAiChatRequestDto {
+export class AiChatRequestDto {
   @ApiProperty({
     description: 'Instrucción de sistema que define el comportamiento del modelo',
     example: 'Eres un asistente médico experto en radiología.',
@@ -17,7 +17,7 @@ export class OpenAiChatRequestDto {
   userMessage: string;
 }
 
-export class OpenAiChatResponseDto {
+export class AiChatResponseDto {
   @ApiProperty({ description: 'Texto generado por el modelo', example: 'Las detecciones de hdisc indican...' })
   text: string;
 

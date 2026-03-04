@@ -14,14 +14,14 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { DetectionService } from '../services/detection.service';
+import { DetectionService } from './detection.service';
 import {
   PredictAllRequestDto,
   PredictAllResponseDto,
   PredictRequestDto,
   PredictResponseDto,
-} from '../dto/predict.dto';
-import { MulterFile } from '../types/multer-file.type';
+} from './dto/predict.dto';
+import { MulterFile } from './types/multer-file.type';
 
 @ApiTags('Integrations - Detection')
 @ApiBearerAuth()
@@ -44,30 +44,10 @@ export class DetectionController {
       type: 'object',
       required: ['image', 'model'],
       properties: {
-        image: {
-          type: 'string',
-          format: 'binary',
-          description: 'Imagen de RM en escala de grises (jpg / png)',
-        },
-        model: {
-          type: 'string',
-          description: 'Nombre del modelo a usar',
-          example: 'yolo-hernia-v1',
-        },
-        conf: {
-          type: 'number',
-          description: 'Umbral de confianza (0–1)',
-          default: 0.25,
-          minimum: 0,
-          maximum: 1,
-        },
-        iou: {
-          type: 'number',
-          description: 'Umbral IoU para NMS (0–1)',
-          default: 0.45,
-          minimum: 0,
-          maximum: 1,
-        },
+        image: { type: 'string', format: 'binary', description: 'Imagen de RM en escala de grises (jpg / png)' },
+        model: { type: 'string', description: 'Nombre del modelo a usar', example: 'yolo-hernia-v1' },
+        conf:  { type: 'number', description: 'Umbral de confianza (0–1)', default: 0.25, minimum: 0, maximum: 1 },
+        iou:   { type: 'number', description: 'Umbral IoU para NMS (0–1)', default: 0.45, minimum: 0, maximum: 1 },
       },
     },
   })
@@ -98,25 +78,9 @@ export class DetectionController {
       type: 'object',
       required: ['image'],
       properties: {
-        image: {
-          type: 'string',
-          format: 'binary',
-          description: 'Imagen de RM en escala de grises (jpg / png)',
-        },
-        conf: {
-          type: 'number',
-          description: 'Umbral de confianza (0–1)',
-          default: 0.25,
-          minimum: 0,
-          maximum: 1,
-        },
-        iou: {
-          type: 'number',
-          description: 'Umbral IoU para NMS (0–1)',
-          default: 0.45,
-          minimum: 0,
-          maximum: 1,
-        },
+        image: { type: 'string', format: 'binary', description: 'Imagen de RM en escala de grises (jpg / png)' },
+        conf:  { type: 'number', description: 'Umbral de confianza (0–1)', default: 0.25, minimum: 0, maximum: 1 },
+        iou:   { type: 'number', description: 'Umbral IoU para NMS (0–1)', default: 0.45, minimum: 0, maximum: 1 },
       },
     },
   })

@@ -1,7 +1,7 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import axios, { AxiosError } from 'axios';
-import { PredictResponseDto, PredictAllResponseDto } from '../dto/predict.dto';
-import { MulterFile } from '../types/multer-file.type';
+import { PredictResponseDto, PredictAllResponseDto } from './dto/predict.dto';
+import { MulterFile } from './types/multer-file.type';
 
 @Injectable()
 export class DetectionService {
@@ -56,8 +56,6 @@ export class DetectionService {
       this.handleAxiosError(err);
     }
   }
-
-  // ── Helpers ──────────────────────────────────────────────────────────────────
 
   private buildForm(file: MulterFile): FormData {
     const form = new FormData();
