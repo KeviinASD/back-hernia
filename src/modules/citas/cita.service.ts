@@ -3,29 +3,36 @@ import {
     NotFoundException,
     BadRequestException,
     ConflictException,
+    Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, FindOptionsWhere } from 'typeorm';
 import { Cita, EstadoCita } from './entities/cita.entity';
+import { Paciente } from '../pacientes/entities/paciente.entity';
 import { CreateCitaDto } from './dto/create-cita.dto';
 import { FilterCitaDto } from './dto/filter-cita.dto';
 import { UpdateCitaDto } from './dto/update-cita.dto';
 
 @Injectable()
 export class CitasService {
+    private readonly logger = new Logger(CitasService.name);
+
     constructor(
         @InjectRepository(Cita)
         private readonly citaRepo: Repository<Cita>,
+        @InjectRepository(Paciente)
+        private readonly pacienteRepo: Repository<Paciente>,
     ) { }
 
     // ─── CREAR CITA ───────────────────────────────────────────────────────────
 
     async create(dto: CreateCitaDto, doctorId: string): Promise<Cita> {
+        this.logger.log(`Creando cita: patient=${dto.pacienteId}, date=${dto.fechaCita}, doctor=${doctorId}`);
         const fechaCita = new Date(dto.fechaCita);
 
         // Validar que la fecha no sea en el pasado
         if (fechaCita < new Date()) {
-            throw new BadRequestException('La fecha de la cita no puede ser en el pasado.');
+            throw new BadRequestException(`La fecha de la cita (${fechaCita.toISOString()}) no puede ser en el pasado (Actual: ${new Date().toISOString()}).`);
         }
 
         // Validar solapamiento: mismo doctor, misma hora ± 30 min
@@ -59,7 +66,7 @@ export class CitasService {
 
         const [data, total] = await this.citaRepo.findAndCount({
             where,
-            relations: ['paciente', 'doctor', 'diagnostico'],
+            relations: ['paciente', 'doctor'],
             order: { fechaCita: 'ASC' },
             skip: (page - 1) * limit,
             take: limit,
@@ -78,7 +85,7 @@ export class CitasService {
     async findOne(id: string): Promise<Cita> {
         const cita = await this.citaRepo.findOne({
             where: { id },
-            relations: ['paciente', 'doctor', 'imagenes', 'diagnostico', 'diagnostico.resultadosML'],
+            relations: ['paciente', 'doctor', 'imagenes'],
         });
 
         if (!cita) {
@@ -90,10 +97,10 @@ export class CitasService {
 
     // ─── CITAS DE UN PACIENTE ─────────────────────────────────────────────────
 
-    async findByPaciente(pacienteId: string): Promise<Cita[]> {
+    async findByPaciente(pacienteId: number): Promise<Cita[]> {
         return this.citaRepo.find({
             where: { pacienteId },
-            relations: ['doctor', 'diagnostico'],
+            relations: ['doctor'],
             order: { fechaCita: 'DESC' },
         });
     }
@@ -110,7 +117,7 @@ export class CitasService {
                 doctorId,
                 fechaCita: Between(inicio, fin),
             },
-            relations: ['paciente', 'diagnostico'],
+            relations: ['paciente'],
             order: { fechaCita: 'ASC' },
         });
     }

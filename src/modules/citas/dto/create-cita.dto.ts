@@ -6,12 +6,13 @@ import {
     IsNotEmpty,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 
 export class CreateCitaDto {
-    @ApiProperty({ example: 'uuid-del-paciente' })
-    @IsUUID()
+    @ApiProperty({ example: 1 })
+    @Transform(({ value }) => Number(value))
     @IsNotEmpty()
-    pacienteId: string;
+    pacienteId: number;
 
     @ApiProperty({ example: '2024-07-20T10:00:00.000Z' })
     @IsDateString()

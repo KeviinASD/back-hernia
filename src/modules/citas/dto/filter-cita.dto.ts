@@ -10,9 +10,9 @@ import { Transform } from 'class-transformer';
 
 export class FilterCitaDto {
     @ApiPropertyOptional()
-    @IsUUID()
+    @Transform(({ value }) => (value ? Number(value) : undefined))
     @IsOptional()
-    pacienteId?: string;
+    pacienteId?: number;
 
     @ApiPropertyOptional()
     @IsUUID()
