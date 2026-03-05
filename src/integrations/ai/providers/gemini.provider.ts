@@ -1,6 +1,8 @@
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { GoogleGenAI, Part } from '@google/genai';
 
+const DEFAULT_MODEL = 'gemini-2.5-flash';
+
 const MIME_AUDIO_MAP: Record<string, string> = {
     'audio/mpeg': 'audio/mp3',
     'audio/mp3': 'audio/mp3',
@@ -39,7 +41,7 @@ export class GeminiProvider {
 
         try {
             const response = await this.ai.models.generateContent({
-                model: 'gemini-1.5-pro',
+                model: DEFAULT_MODEL,
                 contents: `${systemPrompt}\n\n${userMessage}`,
                 config: {
                     temperature: 0.2,
@@ -72,14 +74,14 @@ export class GeminiProvider {
 
         try {
             const response = await this.ai.models.generateContent({
-                model: 'gemini-1.5-pro',
+                model: DEFAULT_MODEL,
                 contents: [
                     { role: 'user', parts: [{ text: `${systemPrompt}\n\n${userMessage}` }, imagePart] },
                 ],
                 config: {
                     temperature: 0.2,
                     topP: 0.8,
-                    maxOutputTokens: 2048,
+                    maxOutputTokens: 8192,
                 },
             });
 
@@ -107,7 +109,7 @@ export class GeminiProvider {
 
         try {
             const response = await this.ai.models.generateContent({
-                model: 'gemini-1.5-pro',
+                model: DEFAULT_MODEL,
                 contents: [
                     {
                         role: 'user',
