@@ -34,7 +34,7 @@ export class ImagenesService {
     async findByCita(citaId: string): Promise<ImagenRm[]> {
         const imagenes = await this.imagenRepo.find({ where: { citaId } });
         if (!imagenes.length)
-            throw new NotFoundException(`No hay imágenes para la cita ${citaId}`);
+            return [];
         return imagenes;
     }
 
