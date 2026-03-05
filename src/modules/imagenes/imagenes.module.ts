@@ -1,0 +1,18 @@
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
+import { ImagenesService } from './imagenes.service';
+import { ImagenRm } from './entities/imagenes.entity';
+import { ImagenesController } from './imagenes.controller';
+
+
+@Module({
+    imports: [
+        TypeOrmModule.forFeature([ImagenRm]),
+        ConfigModule,   // para leer STORAGE_TYPE, STORAGE_LOCAL_PATH, etc.
+    ],
+    controllers: [ImagenesController],
+    providers: [ImagenesService],
+    exports: [ImagenesService], // DiagnosticoModule lo necesita para leer buffers
+})
+export class ImagenesModule { }
