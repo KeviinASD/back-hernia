@@ -13,6 +13,7 @@ import { CitasModule } from './modules/citas/cita.module';
 import { ImagenesModule } from './modules/imagenes/imagenes.module';
 import { DiagnosticoModule } from './modules/diagnostico/diagnostico.module';
 import { NotificacionesModule } from './modules/notificaciones/notificaciones.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 const config: DatabaseConfig = configService.get<DatabaseConfig>('DATABASE');
 
@@ -52,6 +53,7 @@ const config: DatabaseConfig = configService.get<DatabaseConfig>('DATABASE');
     ImagenesModule,
     DiagnosticoModule,
     NotificacionesModule,
+    DashboardModule,
   ],
   controllers: [],
   providers: [],
