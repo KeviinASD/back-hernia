@@ -61,4 +61,9 @@ export class Cita {
 
     @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;
+    // src/citas/entities/cita.entity.ts — AGREGAR esta relación (ya la tienes comentada)
+
+    // Dentro de la clase Cita, descomentar y ajustar:
+    @OneToOne(() => Diagnostico, (d) => d.cita)
+    diagnostico: Diagnostico;
 }

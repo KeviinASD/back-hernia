@@ -5,5 +5,6 @@ import { DetectionController } from './detection.controller';
 @Module({
   controllers: [DetectionController],
   providers: [DetectionService],
+  exports: [DetectionService],
 })
 export class DetectionModule {}

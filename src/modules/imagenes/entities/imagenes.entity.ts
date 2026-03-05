@@ -1,39 +1,40 @@
+// src/imagenes/entities/imagen-rm.entity.ts
+
 import {
-    Entity,
-    PrimaryGeneratedColumn,
-    Column,
-    ManyToOne,
-    JoinColumn,
-    CreateDateColumn,
+    Entity, PrimaryGeneratedColumn, Column,
+    ManyToOne, JoinColumn, CreateDateColumn,
 } from 'typeorm';
 import { Cita } from '../../citas/entities/cita.entity';
 
 @Entity('imagenes_rm')
 export class ImagenRm {
-    @PrimaryGeneratedColumn()
-    id: number;
 
-    @ManyToOne(() => Cita, (cita) => cita.imagenes, { nullable: false, onDelete: 'CASCADE' })
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
+
+    @ManyToOne(() => Cita, (cita) => cita.imagenes, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'cita_id' })
     cita: Cita;
 
     @Column({ name: 'cita_id' })
-    citaId: number;
+    citaId: string;
 
-    @Column({ name: 'archivo_path', type: 'text' })
-    archivoPath: string;           // ruta local o clave S3
+    // ── Archivo almacenado directamente en BD ────────────────────────────────────
+    @Column({ type: 'bytea' })
+    datos: Buffer;                          // contenido binario de la imagen
 
-    @Column({ name: 'archivo_nombre', length: 255, nullable: true })
-    archivoNombre: string;
+    @Column({ name: 'mime_type', length: 50 })
+    mimeType: string;                       // 'image/jpeg' | 'image/png' | 'image/dicom'
 
-    @Column({ name: 'mime_type', length: 50, nullable: true })
-    mimeType: string;
+    @Column({ name: 'nombre_archivo', length: 255 })
+    nombreArchivo: string;
 
-    @Column({ name: 'size_bytes', type: 'int', nullable: true })
-    sizeBytes: number;
+    @Column({ type: 'int', nullable: true })
+    tamano_bytes: number;
 
-    @Column({ name: 'es_principal', default: false })
-    esPrincipal: boolean;          // la imagen que se envía a Gemini Vision
+    // Resultado ML asociado a esta imagen (se llena tras correr YOLO)
+    @Column({ name: 'ml_procesada', default: false })
+    mlProcesada: boolean;
 
     @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;

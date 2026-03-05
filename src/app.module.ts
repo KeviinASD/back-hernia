@@ -11,6 +11,8 @@ import { PacientesModule } from './modules/pacientes/pacientes.module';
 import { HistoriaClinicaModule } from './modules/historia-clinica/historia-clinica.module';
 import { CitasModule } from './modules/citas/cita.module';
 import { ImagenesModule } from './modules/imagenes/imagenes.module';
+import { DiagnosticoModule } from './modules/diagnostico/diagnostico.module';
+import { NotificacionesModule } from './modules/notificaciones/notificaciones.module';
 
 const config: DatabaseConfig = configService.get<DatabaseConfig>('DATABASE');
 
@@ -48,6 +50,8 @@ const config: DatabaseConfig = configService.get<DatabaseConfig>('DATABASE');
     HistoriaClinicaModule,
     CitasModule,
     ImagenesModule,
+    DiagnosticoModule,
+    NotificacionesModule,
   ],
   controllers: [],
   providers: [],
