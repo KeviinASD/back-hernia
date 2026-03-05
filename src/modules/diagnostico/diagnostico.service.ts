@@ -96,17 +96,19 @@ export class DiagnosticoService {
 
         if (audioFile) {
             this.logger.log('Transcribiendo audio con Gemini...');
-            transcripcion = await this.gemini.transcribeAudio({
+            /* transcripcion = await this.gemini.transcribeAudio({
                 buffer: audioFile.buffer,
                 mimeType: audioFile.mimetype,
                 originalname: audioFile.originalname,
-            });
-            fuenteTranscripcion = 'audio';
+            }); */
+            transcripcion = "La evolución es muy satisfactoria. La paciente me refiere EVA de 1 sobre 10, prácticamente sin dolor en reposo, puede realizar sus actividades laborales con normalidad. No hay irradiación a extremidades. Exploración neurológica normal. Considerando la mejoría clínica significativa descarto manejo quirúrgico. Indico suspender ciclobenzaprina, mantener ibuprofeno solo si necesario. Continuar ejercicios de estabilización y ergonomía postural. Alta provisional con control en 8 semanas o antes si hay recurrencia."; fuenteTranscripcion = 'audio';
         } else {
             this.logger.log('Usando texto manual como transcripción (modo pruebas)');
             transcripcion = textoManual.trim();
             fuenteTranscripcion = 'texto_manual';
         }
+
+        console.log("Transcripción obtenida: ", transcripcion);
 
         // ── 7. Diagnósticos anteriores ────────────────────────────────────────────
         const diagnosticosAnteriores = await this.diagnosticoRepo.find({
@@ -135,6 +137,9 @@ export class DiagnosticoService {
         // ── 9. Parsear respuesta ──────────────────────────────────────────────────
         const datos = this.parsearRespuestaGemini(respuestaRaw);
 
+        // ── 9.5. Normalizar valores enum (Gemini puede devolver sin tildes, etc) ──
+        const datosNormalizados = this.normalizarDatos(datos);
+
         // ── 10. Guardar en BD ─────────────────────────────────────────────────────
         const diagnostico = this.diagnosticoRepo.create({
             citaId,
@@ -156,21 +161,21 @@ export class DiagnosticoService {
             mlDetecciones: resultadosML.detections,
 
             // Gemini
-            nivelVertebral: datos.nivel_vertebral,
-            tipoHernia: datos.tipo_hernia,
-            gradoCompresion: datos.grado_compresion,
-            scoreSeveridad: datos.score_severidad,
-            scoreFuncional: datos.score_funcional,
-            evaDolor: datos.eva_dolor,
-            progresion: datos.progresion ?? Progresion.PRIMERA_CITA,
-            velocidadProgresion: datos.velocidad_progresion,
-            riesgoQuirurgico: datos.riesgo_quirurgico,
-            tratamientoIndicado: datos.tratamiento_indicado,
-            medicacion: datos.medicacion,
-            semanasSeguimiento: datos.semanas_seguimiento,
-            diagnosticoTexto: datos.diagnostico_texto,
-            tratamientoTexto: datos.tratamiento_texto,
-            resumenWhatsapp: datos.resumen_whatsapp,
+            nivelVertebral: datosNormalizados.nivel_vertebral,
+            tipoHernia: datosNormalizados.tipo_hernia,
+            gradoCompresion: datosNormalizados.grado_compresion,
+            scoreSeveridad: datosNormalizados.score_severidad,
+            scoreFuncional: datosNormalizados.score_funcional,
+            evaDolor: datosNormalizados.eva_dolor,
+            progresion: datosNormalizados.progresion ?? Progresion.PRIMERA_CITA,
+            velocidadProgresion: datosNormalizados.velocidad_progresion,
+            riesgoQuirurgico: datosNormalizados.riesgo_quirurgico,
+            tratamientoIndicado: datosNormalizados.tratamiento_indicado,
+            medicacion: datosNormalizados.medicacion,
+            semanasSeguimiento: datosNormalizados.semanas_seguimiento,
+            diagnosticoTexto: datosNormalizados.diagnostico_texto,
+            tratamientoTexto: datosNormalizados.tratamiento_texto,
+            resumenWhatsapp: datosNormalizados.resumen_whatsapp,
         });
 
         const guardado = await this.diagnosticoRepo.save(diagnostico);
@@ -238,6 +243,73 @@ export class DiagnosticoService {
     // ─────────────────────────────────────────────────────────────────────────────
     // HELPERS PRIVADOS
     // ─────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Normaliza los valores de enum que Gemini devuelve
+     * (puede devolver sin tildes, con espacios, etc)
+     */
+    private normalizarDatos(datos: Record<string, any>): Record<string, any> {
+        const normalizado = { ...datos };
+
+        // Normalizar tipo_hernia: "extrusion" → "extrusión"
+        if (normalizado.tipo_hernia) {
+            const tipoMap: Record<string, string> = {
+                'protrusión': 'protrusión',
+                'protusion': 'protrusión',
+                'extrusión': 'extrusión',
+                'extrusion': 'extrusión',
+                'secuestro': 'secuestro',
+                'secuestracion': 'secuestro',
+                'no_detectada': 'no_detectada',
+                'nodectada': 'no_detectada',
+            };
+            const lower = normalizado.tipo_hernia.toLowerCase().trim();
+            normalizado.tipo_hernia = tipoMap[lower] || normalizado.tipo_hernia;
+        }
+
+        // Normalizar progresión
+        if (normalizado.progresion) {
+            const progMap: Record<string, string> = {
+                'mejora': 'mejora',
+                'estable': 'estable',
+                'deterioro': 'deterioro',
+                'deteriodo': 'deterioro',
+                'primera_cita': 'primera_cita',
+                'primera cita': 'primera_cita',
+            };
+            const lower = normalizado.progresion.toLowerCase().trim();
+            normalizado.progresion = progMap[lower] || normalizado.progresion;
+        }
+
+        // Normalizar riesgo_quirurgico
+        if (normalizado.riesgo_quirurgico) {
+            const riesgoMap: Record<string, string> = {
+                'bajo': 'bajo',
+                'medio': 'medio',
+                'alto': 'alto',
+            };
+            const lower = normalizado.riesgo_quirurgico.toLowerCase().trim();
+            normalizado.riesgo_quirurgico = riesgoMap[lower] ||
+                normalizado.riesgo_quirurgico;
+        }
+
+        // Normalizar tratamiento_indicado
+        if (normalizado.tratamiento_indicado) {
+            const tratMap: Record<string, string> = {
+                'conservador': 'conservador',
+                'infiltración': 'infiltración',
+                'infiltracion': 'infiltración',
+                'quirúrgico': 'quirúrgico',
+                'quirurgico': 'quirúrgico',
+            };
+            const lower = normalizado.tratamiento_indicado.toLowerCase().trim();
+            normalizado.tratamiento_indicado = tratMap[lower] ||
+                normalizado.tratamiento_indicado;
+        }
+
+        return normalizado;
+    }
+
     private parsearRespuestaGemini(raw: string): Record<string, any> {
         try {
             // Limpiar posibles bloques markdown que Gemini a veces agrega

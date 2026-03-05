@@ -2,9 +2,11 @@
 
 import { Injectable, Logger } from '@nestjs/common';
 import axios, { AxiosError } from 'axios';
+import * as PDFDocument from 'pdfkit';
 import { Paciente } from '../pacientes/entities/paciente.entity';
-import { Diagnostico } from '../diagnostico/entities/diagnostico.entity';
+import { Diagnostico, Progresion } from '../diagnostico/entities/diagnostico.entity';
 import { WhatsappPayloadDto } from './dto/whatsapp-payload.dto';
+import { WhatsappPdfPayloadDto } from './dto/whatsapp-pdf-payload.dto';
 
 @Injectable()
 export class NotificacionesService {
@@ -12,6 +14,7 @@ export class NotificacionesService {
     private readonly logger = new Logger(NotificacionesService.name);
 
     private readonly webhookUrl = process.env.N8N_WEBHOOK_URL ?? '';
+    private readonly webhookReporte = process.env.VITE_N8N_REPORTE_PDF ?? '';
     private readonly webhookSecret = process.env.N8N_WEBHOOK_SECRET ?? '';
 
     // ─── Método principal ────────────────────────────────────────────────────────
@@ -99,7 +102,7 @@ export class NotificacionesService {
         doctor: { nombre: string; apellido: string },
     ): Promise<void> {
 
-        if (!this.webhookUrl) {
+        if (!this.webhookReporte) {
             this.logger.warn('N8N_WEBHOOK_URL no configurado — envío de PDF omitido');
             return;
         }
@@ -113,14 +116,14 @@ export class NotificacionesService {
 
         const pdfBuffer = await this.generarPdfResumenTratamiento(paciente, diagnosticos, doctor);
 
+        const fechaStr = new Date().toISOString().split('T')[0];
         const payload: WhatsappPdfPayloadDto = {
-            tipo: 'pdf_reporte',
             telefono: this.formatearTelefono(paciente.telefono),
-            pacienteId: paciente.id,
-            nombrePaciente: `${paciente.nombre} ${paciente.apellido}`,
-            pdfBase64: pdfBuffer.toString('base64'),
-            nombreArchivo: `reporte-tratamiento-${paciente.id}.pdf`,
-            caption: `Estimado/a ${paciente.nombre}, adjuntamos su reporte de seguimiento de tratamiento generado por Dr. ${doctor.nombre} ${doctor.apellido}. Ante cualquier duda, comuníquese con nuestro consultorio.`,
+            fileName: `reporte-tratamiento-${fechaStr}.pdf`,
+            mimeType: 'application/pdf',
+            file: pdfBuffer.toString('base64'),
+            generatedAt: new Date().toISOString(),
+            size: pdfBuffer.length,
         };
 
         try {
@@ -129,7 +132,7 @@ export class NotificacionesService {
             const headers: Record<string, string> = { 'Content-Type': 'application/json' };
             if (this.webhookSecret) headers['x-webhook-secret'] = this.webhookSecret;
 
-            const response = await axios.post(this.webhookUrl, payload, {
+            const response = await axios.post(this.webhookReporte, payload, {
                 headers,
                 timeout: 30_000, // 30 s — el PDF puede tardar más
             });
@@ -162,7 +165,7 @@ export class NotificacionesService {
         const ultimo = ordenados[ordenados.length - 1];
 
         return new Promise((resolve, reject) => {
-            const doc = new PDFDocument({ size: 'A4', margin: 50 });
+            const doc = new PDFDocument({ size: 'A4', margin: 50, bufferPages: true });
             const chunks: Buffer[] = [];
             doc.on('data', (chunk: Buffer) => chunks.push(chunk));
             doc.on('end', () => resolve(Buffer.concat(chunks)));
@@ -255,33 +258,39 @@ export class NotificacionesService {
                     .text((ultimo.riesgoQuirurgico ?? '—').toUpperCase(), 420, cajaY + 24);
 
                 doc.moveDown(4.5);
+                doc.x = 50; // resetear cursor al margen izquierdo tras posiciones explícitas de la caja
 
                 // Texto diagnóstico
                 if (ultimo.diagnosticoTexto) {
-                    doc.fillColor('#2c3e50').fontSize(10).font('Helvetica-Bold').text('Diagnóstico:');
-                    doc.font('Helvetica').fillColor('#2c3e50').text(ultimo.diagnosticoTexto, { align: 'justify' });
+                    doc.fillColor('#2c3e50').fontSize(10).font('Helvetica-Bold')
+                        .text('Diagnóstico:', 50, doc.y);
+                    doc.font('Helvetica').fillColor('#2c3e50')
+                        .text(ultimo.diagnosticoTexto, 50, doc.y, { align: 'justify', width: W });
                     doc.moveDown(0.5);
                 }
 
                 // Tratamiento
                 if (ultimo.tratamientoTexto) {
-                    doc.font('Helvetica-Bold').fillColor('#2c3e50').text('Plan de tratamiento:');
-                    doc.font('Helvetica').text(ultimo.tratamientoTexto, { align: 'justify' });
+                    doc.font('Helvetica-Bold').fillColor('#2c3e50')
+                        .text('Plan de tratamiento:', 50, doc.y);
+                    doc.font('Helvetica')
+                        .text(ultimo.tratamientoTexto, 50, doc.y, { align: 'justify', width: W });
                     doc.moveDown(0.5);
                 }
 
                 // Medicación
                 if (ultimo.medicacion?.length) {
-                    doc.font('Helvetica-Bold').fillColor('#2c3e50').text('Medicación indicada:');
+                    doc.font('Helvetica-Bold').fillColor('#2c3e50')
+                        .text('Medicación indicada:', 50, doc.y);
                     ultimo.medicacion.forEach(m => {
-                        doc.font('Helvetica').text(`  • ${m}`);
+                        doc.font('Helvetica').text(`  • ${m}`, 50, doc.y);
                     });
                     doc.moveDown(0.5);
                 }
 
                 if (ultimo.semanasSeguimiento) {
                     doc.font('Helvetica-Bold').fillColor('#2c3e50')
-                        .text(`Seguimiento: ${ultimo.semanasSeguimiento} semanas`);
+                        .text(`Seguimiento: ${ultimo.semanasSeguimiento} semanas`, 50, doc.y);
                 }
 
                 doc.moveDown(1);

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install pdfkit @types/pdfkit)",
+      "Bash(npm list pdfkit)",
+      "Bash(npx tsc --noEmit)"
+    ]
+  }
+}
