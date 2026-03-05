@@ -70,7 +70,7 @@ export class CitasController {
     @ApiOperation({ summary: 'Historial de citas de un paciente' })
     @ApiParam({ name: 'pacienteId', type: 'string', format: 'uuid' })
     findByPaciente(@Param('pacienteId', ParseUUIDPipe) pacienteId: string) {
-        return this.citasService.findByPaciente(pacienteId);
+        return this.citasService.findByPaciente(Number(pacienteId));
     }
 
     // GET /citas/:id

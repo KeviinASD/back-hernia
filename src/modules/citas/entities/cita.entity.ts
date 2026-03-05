@@ -30,7 +30,7 @@ export class Cita {
     paciente: Paciente;
 
     @Column({ name: 'paciente_id' })
-    pacienteId: string;
+    pacienteId: number;
 
     @ManyToOne(() => User, { nullable: false })
     @JoinColumn({ name: 'doctor_id' })

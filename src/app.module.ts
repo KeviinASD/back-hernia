@@ -9,6 +9,8 @@ import { SeedModule } from './config/seeding/seed.module';
 import { IntegrationsModule } from './integrations/integrations.module';
 import { PacientesModule } from './modules/pacientes/pacientes.module';
 import { HistoriaClinicaModule } from './modules/historia-clinica/historia-clinica.module';
+import { CitasModule } from './modules/citas/cita.module';
+import { ImagenesModule } from './modules/imagenes/imagenes.module';
 
 const config: DatabaseConfig = configService.get<DatabaseConfig>('DATABASE');
 
@@ -44,6 +46,8 @@ const config: DatabaseConfig = configService.get<DatabaseConfig>('DATABASE');
     IntegrationsModule,
     PacientesModule,
     HistoriaClinicaModule,
+    CitasModule,
+    ImagenesModule,
   ],
   controllers: [],
   providers: [],
