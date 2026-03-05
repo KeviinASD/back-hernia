@@ -85,7 +85,7 @@ export class CitasService {
     async findOne(id: string): Promise<Cita> {
         const cita = await this.citaRepo.findOne({
             where: { id },
-            relations: ['paciente', 'doctor', 'imagenes'],
+            relations: ['paciente', 'doctor', 'imagenes', 'diagnostico'],
         });
 
         if (!cita) {
