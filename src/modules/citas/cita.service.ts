@@ -100,7 +100,7 @@ export class CitasService {
     async findByPaciente(pacienteId: number): Promise<Cita[]> {
         return this.citaRepo.find({
             where: { pacienteId },
-            relations: ['doctor'],
+            relations: ['doctor', 'diagnostico'],
             order: { fechaCita: 'DESC' },
         });
     }

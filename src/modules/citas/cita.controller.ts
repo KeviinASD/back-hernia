@@ -9,6 +9,7 @@ import {
     UseGuards,
     Request,
     ParseUUIDPipe,
+    ParseIntPipe,
     HttpCode,
     HttpStatus,
 } from '@nestjs/common';
@@ -68,9 +69,9 @@ export class CitasController {
     // GET /citas/paciente/:pacienteId
     @Get('paciente/:pacienteId')
     @ApiOperation({ summary: 'Historial de citas de un paciente' })
-    @ApiParam({ name: 'pacienteId', type: 'string', format: 'uuid' })
-    findByPaciente(@Param('pacienteId', ParseUUIDPipe) pacienteId: string) {
-        return this.citasService.findByPaciente(Number(pacienteId));
+    @ApiParam({ name: 'pacienteId', type: 'number' })
+    findByPaciente(@Param('pacienteId', ParseIntPipe) pacienteId: number) {
+        return this.citasService.findByPaciente(pacienteId);
     }
 
     // GET /citas/:id
