@@ -6,7 +6,7 @@ import {
     Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, FindOptionsWhere } from 'typeorm';
+import { Repository, Between, FindOptionsWhere, MoreThan } from 'typeorm';
 import { Cita, EstadoCita } from './entities/cita.entity';
 import { Paciente } from '../pacientes/entities/paciente.entity';
 import { CreateCitaDto } from './dto/create-cita.dto';
@@ -122,6 +122,22 @@ export class CitasService {
         });
     }
 
+    // ─── PRÓXIMAS CITAS PARA UN DOCTOR (si hoy está vacío) ───────────────────
+
+    async findProximas(doctorId: string, limit = 10): Promise<Cita[]> {
+        const ahora = new Date();
+
+        return this.citaRepo.find({
+            where: {
+                doctorId,
+                fechaCita: MoreThan(ahora),
+            },
+            relations: ['paciente'],
+            order: { fechaCita: 'ASC' },
+            take: limit,
+        });
+    }
+
     // ─── ACTUALIZAR CITA ──────────────────────────────────────────────────────
 
     async update(id: string, dto: UpdateCitaDto, doctorId: string): Promise<Cita> {
@@ -214,6 +230,51 @@ export class CitasService {
             acc[row.estado] = parseInt(row.total);
             return acc;
         }, {} as Record<string, number>);
+    }
+
+    /** Cantidad de citas del día (opcionalmente por doctor). Si doctorId es undefined, cuenta todas. */
+    async getCitasHoyCount(doctorId?: string): Promise<number> {
+        const hoy = new Date();
+        const inicio = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 0, 0, 0, 0);
+        const fin = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 23, 59, 59, 999);
+
+        const qb = this.citaRepo
+            .createQueryBuilder('c')
+            .where('c.fecha_cita BETWEEN :inicio AND :fin', { inicio, fin });
+
+        if (doctorId) qb.andWhere('c.doctor_id = :doctorId', { doctorId });
+
+        return qb.getCount();
+    }
+
+    /** Citas agrupadas por mes (últimos N meses). Para gráficos del dashboard. */
+    async getCitasPorMes(doctorId?: string, meses = 6): Promise<{ mes: string; total: number }[]> {
+        const desde = new Date();
+        desde.setMonth(desde.getMonth() - meses);
+        desde.setDate(1);
+        desde.setHours(0, 0, 0, 0);
+
+        const qb = this.citaRepo
+            .createQueryBuilder('c')
+            .select("TO_CHAR(c.fecha_cita, 'YYYY-MM')", 'mes')
+            .addSelect('COUNT(*)', 'total')
+            .where('c.fecha_cita >= :desde', { desde })
+            .groupBy("TO_CHAR(c.fecha_cita, 'YYYY-MM')")
+            .orderBy('mes', 'ASC');
+
+        if (doctorId) qb.andWhere('c.doctor_id = :doctorId', { doctorId });
+
+        const raw = await qb.getRawMany();
+
+        // Rellenar meses sin citas con 0
+        const result: { mes: string; total: number }[] = [];
+        for (let i = 0; i < meses; i++) {
+            const d = new Date(desde.getFullYear(), desde.getMonth() + i, 1);
+            const mesStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            const found = raw.find((r) => r.mes === mesStr);
+            result.push({ mes: mesStr, total: found ? parseInt(found.total) : 0 });
+        }
+        return result;
     }
 
     // ─── HELPER: VALIDAR DISPONIBILIDAD ──────────────────────────────────────

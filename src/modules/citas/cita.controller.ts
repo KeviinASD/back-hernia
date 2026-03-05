@@ -57,6 +57,13 @@ export class CitasController {
         return this.citasService.findCitasHoy(req.user.id);
     }
 
+    // GET /citas/proximas
+    @Get('proximas')
+    @ApiOperation({ summary: 'Obtener próximas citas del doctor autenticado (si hoy no tiene citas)' })
+    findProximas(@Request() req) {
+        return this.citasService.findProximas(req.user.id);
+    }
+
     // GET /citas/stats
     @Get('stats')
     @ApiOperation({ summary: 'Estadísticas de citas por estado' })
