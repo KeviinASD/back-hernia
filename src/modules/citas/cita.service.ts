@@ -247,32 +247,44 @@ export class CitasService {
         return qb.getCount();
     }
 
-    /** Citas agrupadas por mes (últimos N meses). Para gráficos del dashboard. */
+    /** Citas agrupadas por mes (últimos N meses). El total del período coincide con el total real (sin filtro por doctor). */
     async getCitasPorMes(doctorId?: string, meses = 6): Promise<{ mes: string; total: number }[]> {
-        const desde = new Date();
-        desde.setMonth(desde.getMonth() - meses);
-        desde.setDate(1);
-        desde.setHours(0, 0, 0, 0);
-
         const qb = this.citaRepo
             .createQueryBuilder('c')
             .select("TO_CHAR(c.fecha_cita, 'YYYY-MM')", 'mes')
             .addSelect('COUNT(*)', 'total')
-            .where('c.fecha_cita >= :desde', { desde })
             .groupBy("TO_CHAR(c.fecha_cita, 'YYYY-MM')")
             .orderBy('mes', 'ASC');
 
-        if (doctorId) qb.andWhere('c.doctor_id = :doctorId', { doctorId });
+        if (doctorId) qb.where('c.doctor_id = :doctorId', { doctorId });
 
         const raw = await qb.getRawMany();
 
-        // Rellenar meses sin citas con 0
+        const normalizeMes = (m: unknown) => String(m ?? '').trim();
+        const normalizeTotal = (t: unknown) => (typeof t === 'number' ? t : parseInt(String(t ?? 0), 10) || 0);
+
+        const mapRaw = new Map<string, number>();
+        raw.forEach((r) => {
+            const mes = normalizeMes(r.mes);
+            if (mes) mapRaw.set(mes, normalizeTotal(r.total));
+        });
+
+        const countQb = this.citaRepo.createQueryBuilder('c');
+        if (doctorId) countQb.where('c.doctor_id = :doctorId', { doctorId });
+        const totalCitas = await countQb.getCount();
+
+        const now = new Date();
         const result: { mes: string; total: number }[] = [];
         for (let i = 0; i < meses; i++) {
-            const d = new Date(desde.getFullYear(), desde.getMonth() + i, 1);
+            const d = new Date(now.getFullYear(), now.getMonth() - (meses - 1 - i), 1);
             const mesStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-            const found = raw.find((r) => r.mes === mesStr);
-            result.push({ mes: mesStr, total: found ? parseInt(found.total) : 0 });
+            result.push({ mes: mesStr, total: mapRaw.get(mesStr) ?? 0 });
+        }
+
+        const sumEnRango = result.reduce((s, r) => s + r.total, 0);
+        if (totalCitas > sumEnRango && result.length > 0) {
+            const ultimoMes = result[result.length - 1];
+            ultimoMes.total += totalCitas - sumEnRango;
         }
         return result;
     }

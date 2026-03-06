@@ -24,7 +24,7 @@ export class DashboardService {
       this.pacienteRepo.count({ where: { activo: true } }),
       this.citasService.getStats(doctorId),
       this.citasService.getCitasHoyCount(doctorId),
-      this.citasService.getCitasPorMes(doctorId, 6),
+      this.citasService.getCitasPorMes(doctorId, 4),
     ]);
 
     return {
