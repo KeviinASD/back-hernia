@@ -114,14 +114,14 @@ export class GeminiProvider {
                     {
                         role: 'user',
                         parts: [
-                            { text: 'Transcribe the following audio exactly as spoken, preserving all medical terminology.' },
+                            { text: 'Transcribe exactamente lo que se dice en este audio. El idioma es español. Preserva toda la terminología médica tal como se pronuncia.' },
                             audioPart,
                         ],
                     },
                 ],
                 config: {
                     temperature: 0.0,
-                    maxOutputTokens: 1024,
+                    maxOutputTokens: 4096,
                 },
             });
 

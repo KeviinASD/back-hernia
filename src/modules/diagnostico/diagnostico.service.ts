@@ -96,12 +96,12 @@ export class DiagnosticoService {
 
         if (audioFile) {
             this.logger.log('Transcribiendo audio con Gemini...');
-            /* transcripcion = await this.gemini.transcribeAudio({
+            transcripcion = await this.gemini.transcribeAudio({
                 buffer: audioFile.buffer,
                 mimeType: audioFile.mimetype,
                 originalname: audioFile.originalname,
-            }); */
-            transcripcion = "La evolución es muy satisfactoria. La paciente me refiere EVA de 1 sobre 10, prácticamente sin dolor en reposo, puede realizar sus actividades laborales con normalidad. No hay irradiación a extremidades. Exploración neurológica normal. Considerando la mejoría clínica significativa descarto manejo quirúrgico. Indico suspender ciclobenzaprina, mantener ibuprofeno solo si necesario. Continuar ejercicios de estabilización y ergonomía postural. Alta provisional con control en 8 semanas o antes si hay recurrencia."; fuenteTranscripcion = 'audio';
+            });
+            /* transcripcion = "La evolución es muy satisfactoria. La paciente me refiere EVA de 1 sobre 10, prácticamente sin dolor en reposo, puede realizar sus actividades laborales con normalidad. No hay irradiación a extremidades. Exploración neurológica normal. Considerando la mejoría clínica significativa descarto manejo quirúrgico. Indico suspender ciclobenzaprina, mantener ibuprofeno solo si necesario. Continuar ejercicios de estabilización y ergonomía postural. Alta provisional con control en 8 semanas o antes si hay recurrencia."; fuenteTranscripcion = 'audio'; */
         } else {
             this.logger.log('Usando texto manual como transcripción (modo pruebas)');
             transcripcion = textoManual.trim();
