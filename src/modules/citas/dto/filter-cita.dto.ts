@@ -15,7 +15,6 @@ export class FilterCitaDto {
     pacienteId?: number;
 
     @ApiPropertyOptional()
-    @IsUUID()
     @IsOptional()
     doctorId?: string;
 
