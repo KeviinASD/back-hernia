@@ -19,12 +19,12 @@ export class DashboardService {
     private readonly citasService: CitasService,
   ) {}
 
-  async getStats(doctorId?: string): Promise<DashboardStatsDto> {
+  async getStats(doctorId?: string, meses = 4): Promise<DashboardStatsDto> {
     const [totalPacientes, citasStats, citasHoy, citasPorMes] = await Promise.all([
       this.pacienteRepo.count({ where: { activo: true } }),
       this.citasService.getStats(doctorId),
       this.citasService.getCitasHoyCount(doctorId),
-      this.citasService.getCitasPorMes(doctorId, 4),
+      this.citasService.getCitasPorMes(doctorId, meses),
     ]);
 
     return {
