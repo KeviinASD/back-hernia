@@ -3,11 +3,14 @@
 import {
     Controller, Post, Get, Param, Res,
     UploadedFiles, UseInterceptors, UseGuards, ParseUUIDPipe,
+    Patch,
+    Body,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { Response } from 'express';
 import { ApiTags, ApiBearerAuth, ApiConsumes } from '@nestjs/swagger';
 import { ImagenesService } from './imagenes.service';
+import { PredictAllRequestDto } from 'src/integrations/detection/dto/predict.dto';
 
 @ApiTags('Imágenes RM')
 @ApiBearerAuth()
@@ -51,5 +54,13 @@ export class ImagenesController {
         res.setHeader('Content-Type', imagen.mimeType);
         res.setHeader('Content-Disposition', `inline; filename="${imagen.nombreArchivo}"`);
         res.send(imagen.datos);
+    }
+
+    @Patch(':imageId/procesar')
+    async predecirImagen(
+        @Param('imageId', ParseUUIDPipe) imagenId: string,
+        @Body() body: PredictAllRequestDto,
+    ) {
+        return this.imagenesService.procesarImagen(imagenId, body.conf ?? 0.25, body.iou ?? 0.45);
     }
 }

@@ -5,6 +5,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ImagenRm } from './entities/imagenes.entity';
 import { GeminiProvider } from 'src/integrations/ai/providers/gemini.provider';
+import { PredictAllResponseDto } from 'src/integrations/detection/dto/predict.dto';
+import { DetectionService } from 'src/integrations/detection/detection.service';
+import { MulterFile } from 'src/integrations/detection/types/multer-file.type';
+
 
 @Injectable()
 export class ImagenesService {
@@ -14,6 +18,7 @@ export class ImagenesService {
         @InjectRepository(ImagenRm)
         private readonly imagenRepo: Repository<ImagenRm>,
         private readonly geminiProvider: GeminiProvider,
+        private readonly detectionService: DetectionService,
     ) { }
 
     // Guardar una o varias imágenes para una cita
@@ -110,5 +115,36 @@ Respond ONLY with a JSON object in this exact format, no extra text:
             // Si la IA falla, rechazamos la imagen por seguridad
             return false;
         }
+    }
+
+    // ================================
+    // Procesar imagen con modelos de detección (YOLO)
+    // ================================
+
+    async procesarImagen(
+        imagenId: string,
+        conf: number,
+        iou: number,
+    ): Promise<PredictAllResponseDto> {
+        const imagen = await this.imagenRepo.findOneOrFail({ where: { id: imagenId } });
+
+        const file: MulterFile = {
+            buffer: imagen.datos,
+            mimetype: imagen.mimeType,
+            originalname: imagen.nombreArchivo,
+            fieldname: 'file',
+            encoding: '7bit',
+            size: imagen.tamano_bytes,
+        };
+
+        const resultados = await this.detectionService.predictAll(file, conf, iou);
+
+        await this.imagenRepo.update(imagenId, {
+            mlResultado: resultados,
+            mlProcesada: true,
+            mlProcesadaAt: new Date(),
+        })
+
+        return resultados;
     }
 }

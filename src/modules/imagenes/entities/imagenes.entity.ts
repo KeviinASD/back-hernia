@@ -5,6 +5,7 @@ import {
     ManyToOne, JoinColumn, CreateDateColumn,
 } from 'typeorm';
 import { Cita } from '../../citas/entities/cita.entity';
+import { PredictAllResponseDto } from 'src/integrations/detection/dto/predict.dto';
 
 @Entity('imagenes_rm')
 export class ImagenRm {
@@ -32,9 +33,18 @@ export class ImagenRm {
     @Column({ type: 'int', nullable: true })
     tamano_bytes: number;
 
-    // Resultado ML asociado a esta imagen (se llena tras correr YOLO)
+    // ======================================
+    // Procesamiento con los modelos
+    // ======================================
+
+    @Column({ name: 'ml_resultado', type: 'jsonb', nullable: true })
+    mlResultado: PredictAllResponseDto | null;  // null = aún no procesada
+
     @Column({ name: 'ml_procesada', default: false })
     mlProcesada: boolean;
+
+    @Column({ name: 'ml_procesada_at', nullable: true })
+    mlProcesadaAt: Date | null;
 
     @CreateDateColumn({ name: 'created_at' })
     createdAt: Date;
