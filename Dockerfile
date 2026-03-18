@@ -7,7 +7,7 @@ RUN npm install
 
 COPY . .
 
-EXPOSE 3030
+EXPOSE 3030 3000
 
 CMD ["sh", "-c", "npm run start:dev"]
 
